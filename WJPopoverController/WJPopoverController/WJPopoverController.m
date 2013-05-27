@@ -91,6 +91,7 @@ CG_INLINE CGFloat CGRectGetArea(CGRect r)
 	self.dimmer.anchorView = view;
 	self.dimmer.permittedArrowDirections = arrowDirections;
 	[self updateToOrientation:[UIApplication sharedApplication].statusBarOrientation];
+	[self addObserver:self forKeyPath:@"contentViewController.contentSizeForViewInPopover" options:0 context:NULL];
 	[UIView animateWithDuration:animated ? 0.1 : 0
 					 animations:^{
 						 self.dimmer.alpha = 1;
@@ -129,6 +130,7 @@ CG_INLINE CGFloat CGRectGetArea(CGRect r)
 	[[NSNotificationCenter defaultCenter] removeObserver:self
 													name:UIApplicationWillChangeStatusBarOrientationNotification
 												  object:nil];
+	[self removeObserver:self forKeyPath:@"contentViewController.contentSizeForViewInPopover"];
 	[self.contentViewController beginAppearanceTransition:NO animated:animated];
 	[UIView animateWithDuration:animated ? 0.2 : 0
 					 animations:^{
@@ -145,6 +147,17 @@ CG_INLINE CGFloat CGRectGetArea(CGRect r)
 }
 
 #pragma mark Internals
+
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
+{
+	if ([@"contentViewController.contentSizeForViewInPopover" isEqualToString:keyPath]) {
+		[self.dimmer setNeedsLayout];
+		[UIView animateWithDuration:0.2
+						 animations:^{
+							 [self.dimmer layoutIfNeeded];
+						 }];
+	}
+}
 
 - (void)updateToOrientation:(UIInterfaceOrientation)orientation
 {

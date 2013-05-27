@@ -10,6 +10,7 @@
 
 @interface PickerController ()
 @property (nonatomic, copy) NSArray *items;
+@property (nonatomic) NSInteger numberOfItems;
 @property (nonatomic, weak) IBOutlet UITableView *tableView;
 @end
 
@@ -25,8 +26,19 @@
 				@"Item Five",
 				@"Item Six",
 				@"Item Seven"];
+	self.numberOfItems = 4;
+}
 
-	self.contentSizeForViewInPopover = CGSizeMake(200, 44 + self.items.count * self.tableView.rowHeight);
+- (IBAction)toggleSize:(id)sender
+{
+	self.numberOfItems = (self.numberOfItems == 7) ? 4 : 7;
+}
+
+- (void)setNumberOfItems:(NSInteger)numberOfItems
+{
+	_numberOfItems = numberOfItems;
+	[self.tableView reloadData];
+	self.contentSizeForViewInPopover = CGSizeMake(300, 44 + _numberOfItems * self.tableView.rowHeight);
 }
 
 - (void)viewWillAppear:(BOOL)animated
@@ -55,7 +67,7 @@
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
-	return self.items.count;
+	return self.numberOfItems;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
