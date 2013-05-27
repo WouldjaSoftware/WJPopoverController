@@ -49,6 +49,7 @@ CG_INLINE CGFloat CGRectGetArea(CGRect r)
 		self.contentViewController = viewController;
 		self.popoverLayoutMargins = UIEdgeInsetsMake(10, 10, 10, 10);
 		self.extraVerticalOffset = 0;
+		self.extraHorizontalOffset = 0;
 	}
 	return self;
 }
