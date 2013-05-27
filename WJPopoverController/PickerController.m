@@ -28,6 +28,7 @@
 				@"Item Six",
 				@"Item Seven"];
 	self.numberOfItems = 4;
+	NSLog(@"viewDidLoad");
 }
 
 - (IBAction)toggleSize:(id)sender

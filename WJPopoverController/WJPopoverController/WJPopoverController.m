@@ -78,9 +78,10 @@ CG_INLINE CGFloat CGRectGetArea(CGRect r)
 	WJPopoverBackgroundView *backgroundView = [[backgroundViewClass alloc] initWithFrame:CGRectZero];
 	backgroundView.arrowDirection = UIPopoverArrowDirectionUnknown;
 	[self.dimmer addSubview:backgroundView];
-	
+
+	UIView *contentView = self.contentViewController.view; // This forces viewDidLoad to be called.
 	[self.contentViewController beginAppearanceTransition:YES animated:animated];
-	[self.dimmer addSubview:self.contentViewController.view];
+	[self.dimmer addSubview:contentView];
 	
 	[[NSNotificationCenter defaultCenter] addObserver:self
 											 selector:@selector(screenWillRotate:)
@@ -95,6 +96,7 @@ CG_INLINE CGFloat CGRectGetArea(CGRect r)
 	[self addObserver:self forKeyPath:@"contentViewController.contentSizeForViewInPopover" options:0 context:NULL];
 	[self addObserver:self forKeyPath:@"extraVerticalOffset" options:0 context:NULL];
 	[self addObserver:self forKeyPath:@"extraHorizontalOffset" options:0 context:NULL];
+	[self.dimmer layoutIfNeeded];
 	[UIView animateWithDuration:animated ? 0.1 : 0
 					 animations:^{
 						 self.dimmer.alpha = 1;
@@ -438,6 +440,8 @@ CG_INLINE CGFloat CGRectGetArea(CGRect r)
 
 - (void)layoutSubviews
 {
+	[super layoutSubviews];
+
 	// If the arrow direction has been previously calculated, then don't do
 	// so again. This way, if the popover resizes it won't jump around the
 	// anchor.
