@@ -6,7 +6,7 @@
 
 #import <UIKit/UIKit.h>
 
-@interface WJPopoverBackgroundView : UIPopoverBackgroundView
+@interface WJPopoverBackgroundView : UIView
 
 @property (nonatomic, readwrite) CGFloat arrowOffset;
 
