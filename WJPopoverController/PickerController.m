@@ -7,6 +7,7 @@
 //
 
 #import "PickerController.h"
+#import "WJPopoverController.h"
 
 @interface PickerController ()
 @property (nonatomic, copy) NSArray *items;
@@ -39,6 +40,8 @@
 	_numberOfItems = numberOfItems;
 	[self.tableView reloadData];
 	self.contentSizeForViewInPopover = CGSizeMake(300, 44 + _numberOfItems * self.tableView.rowHeight);
+	self.wjPopoverController.extraVerticalOffset = ((_numberOfItems % 2) == 0) ? 0 : -22;
+	self.wjPopoverController.extraHorizontalOffset = ((_numberOfItems % 2) == 0) ? 0 : -22;
 }
 
 - (void)viewWillAppear:(BOOL)animated

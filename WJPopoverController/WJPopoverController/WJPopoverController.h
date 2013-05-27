@@ -15,6 +15,8 @@
 
 @property (nonatomic, strong) Class popoverBackgroundViewClass;
 @property (nonatomic, readwrite) UIEdgeInsets popoverLayoutMargins;
+@property (nonatomic, readwrite) CGFloat extraVerticalOffset;
+@property (nonatomic, readwrite) CGFloat extraHorizontalOffset;
 
 - (id)initWithContentViewController:(UIViewController *)viewController;
 

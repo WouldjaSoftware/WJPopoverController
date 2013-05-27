@@ -48,6 +48,7 @@ CG_INLINE CGFloat CGRectGetArea(CGRect r)
 	if ((self = [super init])) {
 		self.contentViewController = viewController;
 		self.popoverLayoutMargins = UIEdgeInsetsMake(10, 10, 10, 10);
+		self.extraVerticalOffset = 0;
 	}
 	return self;
 }
@@ -92,6 +93,8 @@ CG_INLINE CGFloat CGRectGetArea(CGRect r)
 	self.dimmer.permittedArrowDirections = arrowDirections;
 	[self updateToOrientation:[UIApplication sharedApplication].statusBarOrientation];
 	[self addObserver:self forKeyPath:@"contentViewController.contentSizeForViewInPopover" options:0 context:NULL];
+	[self addObserver:self forKeyPath:@"extraVerticalOffset" options:0 context:NULL];
+	[self addObserver:self forKeyPath:@"extraHorizontalOffset" options:0 context:NULL];
 	[UIView animateWithDuration:animated ? 0.1 : 0
 					 animations:^{
 						 self.dimmer.alpha = 1;
@@ -131,6 +134,8 @@ CG_INLINE CGFloat CGRectGetArea(CGRect r)
 													name:UIApplicationWillChangeStatusBarOrientationNotification
 												  object:nil];
 	[self removeObserver:self forKeyPath:@"contentViewController.contentSizeForViewInPopover"];
+	[self removeObserver:self forKeyPath:@"extraVerticalOffset"];
+	[self removeObserver:self forKeyPath:@"extraHorizontalOffset"];
 	[self.contentViewController beginAppearanceTransition:NO animated:animated];
 	[UIView animateWithDuration:animated ? 0.2 : 0
 					 animations:^{
@@ -148,14 +153,22 @@ CG_INLINE CGFloat CGRectGetArea(CGRect r)
 
 #pragma mark Internals
 
+- (void)animateLayout
+{
+	[self.dimmer setNeedsLayout];
+	[UIView animateWithDuration:0.2
+					 animations:^{
+						 [self.dimmer layoutIfNeeded];
+					 }];
+}
+
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
 {
-	if ([@"contentViewController.contentSizeForViewInPopover" isEqualToString:keyPath]) {
-		[self.dimmer setNeedsLayout];
-		[UIView animateWithDuration:0.2
-						 animations:^{
-							 [self.dimmer layoutIfNeeded];
-						 }];
+	if ([@"contentViewController.contentSizeForViewInPopover" isEqualToString:keyPath] ||
+		[@"extraVerticalOffset" isEqualToString:keyPath] ||
+		[@"extraHorizontalOffset" isEqualToString:keyPath]) {
+		[NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(animateLayout) object:nil];
+		[self performSelector:@selector(animateLayout) withObject:nil afterDelay:0];
 	}
 }
 
@@ -252,7 +265,7 @@ CG_INLINE CGFloat CGRectGetArea(CGRect r)
 	frame.size = self.popover.contentViewController.contentSizeForViewInPopover;
 	frame.size.height = MIN(CGRectGetHeight(frame), CGRectGetHeight(bounds));
 	frame.size.width = MIN(CGRectGetWidth(frame), CGRectGetWidth(bounds));
-	frame.origin.x = floorf(CGRectGetMidX(anchor) - CGRectGetWidth(frame) / 2);
+	frame.origin.x = floorf(CGRectGetMidX(anchor) - CGRectGetWidth(frame) / 2) - self.popover.extraHorizontalOffset;
 	frame.origin.y = CGRectGetMinY(bounds);
 
 	if (CGRectGetMaxX(frame) > CGRectGetMaxX(bounds))
@@ -261,6 +274,7 @@ CG_INLINE CGFloat CGRectGetArea(CGRect r)
 		offset = CGRectGetMinX(frame) - CGRectGetMinX(bounds);
 
 	frame.origin.x -= offset;
+	offset += self.popover.extraHorizontalOffset;
 
 	if (outOffset)
 		*outOffset = offset;
@@ -280,7 +294,7 @@ CG_INLINE CGFloat CGRectGetArea(CGRect r)
 	frame.size = self.popover.contentViewController.contentSizeForViewInPopover;
 	frame.size.width = MIN(CGRectGetWidth(frame), CGRectGetWidth(bounds));
 	frame.size.height = MIN(CGRectGetHeight(frame), CGRectGetHeight(bounds));
-	frame.origin.x = floorf(CGRectGetMidX(anchor) - CGRectGetWidth(frame) / 2);
+	frame.origin.x = floorf(CGRectGetMidX(anchor) - CGRectGetWidth(frame) / 2) - self.popover.extraHorizontalOffset;
 	frame.origin.y = CGRectGetMaxY(bounds) - CGRectGetHeight(frame);
 
 	if (CGRectGetMaxX(frame) > CGRectGetMaxX(bounds))
@@ -289,6 +303,7 @@ CG_INLINE CGFloat CGRectGetArea(CGRect r)
 		offset = CGRectGetMinX(frame) - CGRectGetMinX(bounds);
 
 	frame.origin.x -= offset;
+	offset += self.popover.extraHorizontalOffset;
 
 	if (outOffset)
 		*outOffset = offset;
@@ -309,7 +324,7 @@ CG_INLINE CGFloat CGRectGetArea(CGRect r)
 	frame.size.width = MIN(CGRectGetWidth(frame), CGRectGetWidth(bounds));
 	frame.size.height = MIN(CGRectGetHeight(frame), CGRectGetHeight(bounds));
 	frame.origin.x = CGRectGetMaxX(bounds) - CGRectGetWidth(frame);
-	frame.origin.y = floorf(CGRectGetMidY(anchor) - CGRectGetHeight(frame) / 2);
+	frame.origin.y = floorf(CGRectGetMidY(anchor) - CGRectGetHeight(frame) / 2) - self.popover.extraVerticalOffset;
 
 	if (CGRectGetMaxY(frame) > CGRectGetMaxY(bounds))
 		offset = CGRectGetMaxY(frame) - CGRectGetMaxY(bounds);
@@ -317,6 +332,7 @@ CG_INLINE CGFloat CGRectGetArea(CGRect r)
 		offset = CGRectGetMinY(frame) - CGRectGetMinY(bounds);
 	
 	frame.origin.y -= offset;
+	offset += self.popover.extraVerticalOffset;
 	
 	if (outOffset)
 		*outOffset = offset;
@@ -339,7 +355,7 @@ CG_INLINE CGFloat CGRectGetArea(CGRect r)
 	frame.size.width = MIN(CGRectGetWidth(frame), CGRectGetWidth(bounds));
 	frame.size.height = MIN(CGRectGetHeight(frame), CGRectGetHeight(bounds));
 	frame.origin.x = CGRectGetMinX(bounds);
-	frame.origin.y = floorf(CGRectGetMidY(anchor) - CGRectGetHeight(frame) / 2);
+	frame.origin.y = floorf(CGRectGetMidY(anchor) - CGRectGetHeight(frame) / 2) - self.popover.extraVerticalOffset;
 	
 	if (CGRectGetMaxY(frame) > CGRectGetMaxY(bounds))
 		offset = CGRectGetMaxY(frame) - CGRectGetMaxY(bounds);
@@ -347,6 +363,7 @@ CG_INLINE CGFloat CGRectGetArea(CGRect r)
 		offset = CGRectGetMinY(frame) - CGRectGetMinY(bounds);
 	
 	frame.origin.y -= offset;
+	offset += self.popover.extraVerticalOffset;
 	
 	if (outOffset)
 		*outOffset = offset;
